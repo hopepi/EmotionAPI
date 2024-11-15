@@ -1,34 +1,23 @@
-"""import tensorflow as tf
-import numpy as np
-from flask import Flask,request,jsonify
-import re
-import pickle
-from tensorflow.keras.preprocessing.text import Tokenizer
-from tensorflow.keras.utils import pad_sequences
-from tensorflow.keras.models import load_model"""
 import os
-
 from flask import Flask, request, jsonify
 import tensorflow as tf
 import numpy as np
 import re
-import os
-from keras.src.utils import pad_sequences
-from keras.src.legacy.preprocessing.text import Tokenizer
-from keras.src.saving import load_model
 import pickle
-import gunicorn
-import fcntl
-print(gunicorn.__version__)
-print(tf.__version__)
+from keras.src.legacy.preprocessing.text import Tokenizer
+from keras.src.utils import pad_sequences
 
-model = load_model("model.h5")
+# TensorFlow Lite modelini yükleyin
+interpreter = tf.lite.Interpreter(model_path="model.tflite")
+interpreter.allocate_tensors()
+
+# Tokenizer'ı yükleyin
 with open('tokenizer.pickle', 'rb') as handle:
     tokenizer = pickle.load(handle)
 
 app = Flask(__name__)
 
-#TEXT TEMİZLEME
+# TEXT TEMİZLEME
 def clean_text(text):
     text = text.lower()
     text = re.sub(r'[^a-zA-Z0-9\s]', '', text)
@@ -41,11 +30,26 @@ def predict():
         text_input = data['input']
         cleaned_input = clean_text(text_input)
 
+        # Tokenize ve pad işlemi
         text_seq = tokenizer.texts_to_sequences([cleaned_input])
         text_pad = pad_sequences(text_seq, maxlen=100, padding='post')
 
-        prediction = model.predict(text_pad)
-        predicted_label = prediction.argmax()
+        # TensorFlow Lite modelini kullanarak tahmin yapma
+        input_details = interpreter.get_input_details()
+        output_details = interpreter.get_output_details()
+
+        # Girdi verisini ayarlama
+        interpreter.set_tensor(input_details[0]['index'], text_pad.astype(np.float32))
+
+        # Modeli çalıştır
+        interpreter.invoke()
+
+        # Çıktı verisini al
+        output_data = interpreter.get_tensor(output_details[0]['index'])
+
+        # Tahmin edilen etiket
+        predicted_label = np.argmax(output_data)
+
         duygu_durumlari = {
             0: "sad",
             1: "happy",
