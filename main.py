@@ -16,6 +16,7 @@ from keras.src.legacy.preprocessing.text import Tokenizer
 from keras.src.saving import load_model
 import pickle
 import gunicorn
+import fcntl
 print(gunicorn.__version__)
 print(tf.__version__)
 
