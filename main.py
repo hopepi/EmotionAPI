@@ -15,6 +15,8 @@ from keras.src.utils import pad_sequences
 from keras.src.legacy.preprocessing.text import Tokenizer
 from keras.src.saving import load_model
 import pickle
+import gunicorn
+print(gunicorn.__version__)
 print(tf.__version__)
 
 model = load_model("model.h5")
