@@ -6,11 +6,13 @@ import pickle
 from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.utils import pad_sequences
 from tensorflow.keras.models import load_model"""
+import os
 
 from flask import Flask, request, jsonify
 import tensorflow as tf
 import numpy as np
 import re
+import os
 from keras.src.utils import pad_sequences
 from keras.src.legacy.preprocessing.text import Tokenizer
 from keras.src.saving import load_model
@@ -64,4 +66,5 @@ def predict():
         return jsonify({'error': str(e)})
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))  # Default to 5000 if PORT is not set
+    app.run(host="0.0.0.0", port=port)
