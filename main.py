@@ -1,6 +1,4 @@
 import os
-from gettext import translation
-
 from flask import Flask, request, jsonify
 import tensorflow as tf
 import numpy as np
