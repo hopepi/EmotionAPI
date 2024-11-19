@@ -1,4 +1,6 @@
 import os
+from gettext import translation
+
 from flask import Flask, request, jsonify
 import tensorflow as tf
 import numpy as np
@@ -6,6 +8,9 @@ import re
 import pickle
 from keras.src.legacy.preprocessing.text import Tokenizer
 from keras.src.utils import pad_sequences
+from langdetect import detect
+from translate import Translator
+
 
 # TensorFlow Lite modelini yükleyin
 interpreter = tf.lite.Interpreter(model_path="model.tflite")
@@ -17,11 +22,29 @@ with open('tokenizer.pickle', 'rb') as handle:
 
 app = Flask(__name__)
 
+
+def detect_language_and_translate(text, target_language="en"):
+    try:
+        detected_language = detect(text)
+        print(f"Tespit edilen dil: {detected_language}")
+
+        if detected_language == target_language:
+            return text
+        translator = Translator(from_lang=detected_language, to_lang=target_language)
+        translation = translator.translate(text)
+        print(translation)
+
+        return translation
+    except Exception as e:
+        return f"Hata: {e}"
+
+
 # TEXT TEMİZLEME
 def clean_text(text):
-    text = text.lower()
-    text = re.sub(r'[^a-zA-Z0-9\s]', '', text)
-    return text
+    translate = detect_language_and_translate(text)
+    translate = translate.lower()
+    translate = re.sub(r'[^a-zA-Z0-9\s]', '', translate)
+    return translate
 
 @app.route('/predict', methods=['POST'])
 def predict():
